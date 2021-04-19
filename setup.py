@@ -21,7 +21,7 @@ this_directory = path.abspath(path.dirname(__file__))
 with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-VERSION = "2.6"
+VERSION = "2.5.5.2"
 
 setup(
     version=VERSION,
@@ -45,7 +45,7 @@ setup(
               'thingsboard_gateway.extensions.mqtt', 'thingsboard_gateway.extensions.modbus', 'thingsboard_gateway.extensions.opcua',
               'thingsboard_gateway.extensions.ble', 'thingsboard_gateway.extensions.serial', 'thingsboard_gateway.extensions.request',
               'thingsboard_gateway.extensions.can', 'thingsboard_gateway.extensions.bacnet', 'thingsboard_gateway.extensions.odbc',
-              'thingsboard_gateway.extensions.rest',  'thingsboard_gateway.extensions.snmp'
+              'thingsboard_gateway.extensions.rest',  'thingsboard_gateway.extensions.snmp', 'thingsboard_gateway.cleaning'
               ],
     install_requires=[
         'jsonpath-rw',

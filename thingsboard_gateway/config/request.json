@@ -1,120 +1,186 @@
 {
-  "host": "http://127.0.0.1:5000",
-  "SSLVerify": true,
+  "host": "https://systemet.glavaenergycenter.se:444",
+  "SSLVerify": false,
   "security": {
-    "type": "basic",
-    "username": "user",
-    "password": "password"
+    "type": "anonymous"
   },
+  "get_batch_of_data": true,
+  "batch_size": 2,
   "mapping": [
     {
-      "url": "getdata",
+      "url": "/MetrumWebapi/api/longtimedata?dataTypeId=3&mpointId=1",
       "httpMethod": "GET",
       "httpHeaders": {
-        "ACCEPT": "application/json"
-      },
-      "content": {
-        "name": "morpheus",
-        "job": "leader"
+      "ACCEPT": "application/json"
       },
       "allowRedirects": true,
-      "timeout": 0.5,
-      "scanPeriod": 5,
+      "timeout": 3,
+      "scanPeriod": 6,
       "converter": {
         "type": "json",
-        "deviceNameJsonExpression": "SD8500",
-        "deviceTypeJsonExpression": "SD",
+        "glava": true,
+        "first_part_of_name": "${mPoint.name}",
+        "second_part_of_name": "${dataType.name}",
+        "deviceNameJsonExpression": "device name",
+        "deviceTypeJsonExpression": "default",
         "attributes": [
           {
-            "key": "serialNumber",
-            "type": "string",
-            "value": "${serial}"
+            "key": "sensorId",
+            "type": "double",
+            "value": "${mPoint.id}"
           }
         ],
         "telemetry": [
           {
-            "key": "Maintainer",
-            "type": "string",
-            "value": "${Developer}"
+            "key": "Wind direction",
+            "type": "double",
+            "value": "${channels[0].values}"
+          },
+          {
+            "key": "Precipitation",
+            "type": "double",
+            "value": "${channels[1].values}"
           }
         ]
       }
     },
     {
-      "url": "get_info",
+      "url": "/MetrumWebapi/api/longtimedata?dataTypeId=3&mpointId=2",
       "httpMethod": "GET",
       "httpHeaders": {
-        "ACCEPT": "application/json"
+      "ACCEPT": "application/json"
       },
       "allowRedirects": true,
-      "timeout": 0.5,
-      "scanPeriod": 100,
+      "timeout": 3,
+      "scanPeriod": 6,
       "converter": {
-        "type": "custom",
-        "deviceNameJsonExpression": "SD8500",
-        "deviceTypeJsonExpression": "SD",
-        "extension": "CustomRequestUplinkConverter",
-        "extension-config": [
+        "type": "json",
+        "glava": true,
+        "first_part_of_name": "${mPoint.name}",
+        "second_part_of_name": "${dataType.name}",
+        "deviceNameJsonExpression": "device name",
+        "deviceTypeJsonExpression": "default",
+        "attributes": [
           {
-            "key": "Totaliser",
-            "type": "float",
-            "fromByte": 0,
-            "toByte": 4,
-            "byteorder": "big",
-            "signed": true,
-            "multiplier": 1
-          },
-          {
-            "key": "Flow",
-            "type": "int",
-            "fromByte": 4,
-            "toByte": 6,
-            "byteorder": "big",
-            "signed": true,
-            "multiplier": 0.01
-          },
+            "key": "sensorId",
+            "type": "double",
+            "value": "${mPoint.id}"
+          }
+        ],
+        "telemetry": [
           {
             "key": "Temperature",
-            "type": "int",
-            "fromByte": 8,
-            "toByte": 10,
-            "byteorder": "big",
-            "signed": true,
-            "multiplier": 0.01
+            "type": "double",
+            "value": "${channels[0].values}"
           },
           {
-            "key": "Pressure",
-            "type": "int",
-            "fromByte": 12,
-            "toByte": 14,
-            "byteorder": "big",
-            "signed": true,
-            "multiplier": 0.01
+            "key": "Humidity",
+            "type": "double",
+            "value": "${channels[1].values}"
           },
           {
-            "key": "deviceStatus",
-            "type": "int",
-            "byteAddress": 15,
-            "fromBit": 4,
-            "toBit": 8,
-            "byteorder": "big",
-            "signed": false
+            "key": "Barometric pressure",
+            "type": "double",
+            "value": "${channels[2].values}"
           },
           {
-            "key": "OUT2",
-            "type": "int",
-            "byteAddress": 15,
-            "fromBit": 1,
-            "toBit": 2,
-            "byteorder": "big"
+            "key": "Wind speed",
+            "type": "double",
+            "value": "${channels[3].values}"
+          }
+        ]
+      }
+    },
+    {
+      "url": "/MetrumWebapi/api/longtimedata?dataTypeId=3&mpointId=3",
+      "httpMethod": "GET",
+      "httpHeaders": {
+      "ACCEPT": "application/json"
+      },
+      "allowRedirects": true,
+      "timeout": 3,
+      "scanPeriod": 6,
+      "converter": {
+        "type": "json",
+        "glava": true,
+        "first_part_of_name": "${mPoint.name}",
+        "second_part_of_name": "${dataType.name}",
+        "deviceNameJsonExpression": "device name",
+        "deviceTypeJsonExpression": "default",
+        "attributes": [
+          {
+            "key": "sensorId",
+            "type": "double",
+            "value": "${mPoint.id}"
+          }
+        ],
+        "telemetry": [
+          {
+            "key": "Global radiation",
+            "type": "double",
+            "value": "${channels[0].values}"
           },
           {
-            "key": "OUT1",
-            "type": "int",
-            "byteAddress": 15,
-            "fromBit": 0,
-            "toBit": 1,
-            "byteorder": "big"
+            "key": "Radiation 40 degrees",
+            "type": "double",
+            "value": "${channels[1].values}"
+          },
+          {
+            "key": "Radiation 30 degrees",
+            "type": "double",
+            "value": "${channels[2].values}"
+          },
+          {
+            "key": "Indirect Radiation",
+            "type": "double",
+            "value": "${channels[3].values}"
+          }
+        ]
+      }
+    },
+    {
+      "url": "/MetrumWebapi/api/longtimedata?dataTypeId=3&mpointId=4",
+      "httpMethod": "GET",
+      "httpHeaders": {
+      "ACCEPT": "application/json"
+      },
+      "allowRedirects": true,
+      "timeout": 3,
+      "scanPeriod": 6,
+      "converter": {
+        "type": "json",
+        "glava": true,
+        "first_part_of_name": "${mPoint.name}",
+        "second_part_of_name": "${dataType.name}",
+        "deviceNameJsonExpression": "device name",
+        "deviceTypeJsonExpression": "default",
+        "attributes": [
+          {
+            "key": "sensorId",
+            "type": "double",
+            "value": "${mPoint.id}"
+          }
+        ],
+        "telemetry": [
+          {
+            "key": "Direct radiation",
+            "type": "double",
+            "value": "${channels[0].values}"
+          },
+          {
+            "key": "Tracker temperature",
+            "type": "double",
+            "value": "${channels[1].values}"
+          },
+          {
+            "key": "Radiation 90 degrees",
+            "type": "double",
+            "value": "${channels[2].values}"
+          },
+          {
+            "key": "Radiation ground reflection",
+            "type": "double",
+            "value": "${channels[3].values}"
           }
         ]
       }

@@ -1,4 +1,4 @@
-#     Copyright 2021. ThingsBoard
+#     Copyright 2020. ThingsBoard
 #
 #     Licensed under the Apache License, Version 2.0 (the "License");
 #     you may not use this file except in compliance with the License.
@@ -11,7 +11,8 @@
 #     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
-
+from collections import defaultdict
+from functools import partial
 from sys import getsizeof, executable, argv
 from os import listdir, path, execv, pathsep, system
 from time import time, sleep
@@ -23,20 +24,20 @@ from random import choice
 from string import ascii_lowercase
 from threading import Thread, RLock
 
+import numpy as np
 from yaml import safe_load
 from simplejson import load, dumps, loads
 
-from thingsboard_gateway.tb_utility.tb_loader import TBModuleLoader
 from thingsboard_gateway.tb_utility.tb_utility import TBUtility
 from thingsboard_gateway.gateway.tb_client import TBClient
-from thingsboard_gateway.tb_utility.tb_updater import TBUpdater
-from thingsboard_gateway.tb_utility.tb_logger import TBLoggerHandler
+from thingsboard_gateway.gateway.tb_updater import TBUpdater
+from thingsboard_gateway.gateway.tb_logger import TBLoggerHandler
 from thingsboard_gateway.storage.memory_event_storage import MemoryEventStorage
 from thingsboard_gateway.storage.file_event_storage import FileEventStorage
-from thingsboard_gateway.tb_utility.tb_gateway_remote_configurator import RemoteConfigurator
-from thingsboard_gateway.tb_utility.tb_remote_shell import RemoteShell
+from thingsboard_gateway.gateway.tb_gateway_remote_configurator import RemoteConfigurator
+from thingsboard_gateway.gateway.tb_remote_shell import RemoteShell
 
-
+from thingsboard_gateway.cleaning.clean_data import DataCleaning
 
 log = logging.getLogger('service')
 main_handler = logging.handlers.MemoryHandler(-1)
@@ -71,9 +72,16 @@ class TBGatewayService:
         global log
         log = logging.getLogger('service')
         log.info("Gateway starting...")
+        
+        #initating DataCleaning
+        self.__dataCleaning = DataCleaning()
+        #initiate list that is persistant in memory which will hold the queues in which the clean data gets stored.
+        self.__list_of_queues = []
+
         self.__updater = TBUpdater()
         self.__updates_check_period_ms = 300000
         self.__updates_check_time = 0
+        self._index_of_telemetry_data = 2
         self.version = self.__updater.get_version()
         log.info("ThingsBoard IoT gateway version: %s", self.version["current_version"])
         self.available_connectors = {}
@@ -197,7 +205,6 @@ class TBGatewayService:
             self.__stop_gateway()
         except Exception as e:
             log.exception(e)
-            self.__stop_gateway()
             self.__close_connectors()
             log.info("The gateway has been stopped.")
             self.tb_client.stop()
@@ -280,7 +287,7 @@ class TBGatewayService:
         if self.__config.get("connectors"):
             for connector in self.__config['connectors']:
                 try:
-                    connector_class = TBModuleLoader.import_module(connector["type"], self._default_connectors.get(connector["type"], connector.get("class")))
+                    connector_class = TBUtility.check_and_import(connector["type"], self._default_connectors.get(connector["type"], connector.get("class")))
                     self._implemented_connectors[connector["type"]] = connector_class
                     with open(self._config_dir + connector['configuration'], 'r', encoding="UTF-8") as conf_file:
                         connector_conf = load(conf_file)
@@ -319,6 +326,8 @@ class TBGatewayService:
                             connector.close()
 
     def send_to_storage(self, connector_name, data):
+        #print("send_to_storage received data now.................................")
+        #print("data in send_to_storage is like this...........................", data)
         if not connector_name == self.name:
             if not TBUtility.validate_converted_data(data):
                 log.error("Data from %s connector is invalid.", connector_name)
@@ -344,8 +353,40 @@ class TBGatewayService:
             data["telemetry"] = telemetry_with_ts
         else:
             data["telemetry"] = {"ts": int(time() * 1000), "values": telemetry}
+        print("¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤")
+        print(data)
+        
+        indexOfDevice = self.__dataCleaning.doesDeviceExist(self.__list_of_queues, data)
+
+        ######### CLEANING SECTION BEGIN  #############
+
+        if indexOfDevice == -1:  # -1 represents not a device yet
+            self.__list_of_queues.append(self.__dataCleaning.createDevice(self.__list_of_queues, data))
+        else:
+            self.__dataCleaning.addTelemetry(self.__list_of_queues, data, indexOfDevice)
+
+        ######### CLEANING SECTIO END #############
+        
+        i = 0
+        testingString = '{"'
+        for test in data["telemetry"]["values"]:
+            testingString += test
+            testingString += '":'
+            testingString += str(self.__list_of_queues[indexOfDevice][i][self._index_of_telemetry_data][-1])
+            if i < (len(data["telemetry"]["values"]) - 1):
+                testingString += ', "'
+            else:
+                testingString += '}'
+            i += 1
+
+        newDictionary = eval(testingString)
+
+        data["telemetry"]["values"].clear()
+        data["telemetry"]["values"].update(newDictionary)
+
 
         json_data = dumps(data)
+
         save_result = self._event_storage.put(json_data)
         if not save_result:
             log.error('Data from the device "%s" cannot be saved, connector name is %s.',
