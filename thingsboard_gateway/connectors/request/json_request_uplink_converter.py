@@ -1,16 +1,16 @@
-#     Copyright 2021. ThingsBoard
+#      Copyright 2020. ThingsBoard
 #
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
+#      Licensed under the Apache License, Version 2.0 (the "License");
+#      you may not use this file except in compliance with the License.
+#      You may obtain a copy of the License at
 #
-#         http://www.apache.org/licenses/LICENSE-2.0
+#          http://www.apache.org/licenses/LICENSE-2.0
 #
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
+#      Unless required by applicable law or agreed to in writing, software
+#      distributed under the License is distributed on an "AS IS" BASIS,
+#      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#      See the License for the specific language governing permissions and
+#      limitations under the License.
 
 from simplejson import dumps, loads
 from thingsboard_gateway.connectors.request.request_converter import RequestConverter, log
@@ -28,10 +28,19 @@ class JsonRequestUplinkConverter(RequestConverter):
             data = loads(data)
         dict_result = {"deviceName": None, "deviceType": None, "attributes": [], "telemetry": []}
         try:
-            if self.__config['converter'].get("deviceNameJsonExpression") is not None:
-                dict_result["deviceName"] = TBUtility.get_value(self.__config['converter'].get("deviceNameJsonExpression"), data, expression_instead_none=True)
+            #added this:
+            if self.__config['converter'].get("glava") is True:
+                name = TBUtility.get_value(self.__config['converter'].get('first_part_of_name'), data, expression_instead_none=True)
+                name += ", "
+                name += TBUtility.get_value(self.__config['converter'].get('second_part_of_name'), data, expression_instead_none=True)
+                dict_result["deviceName"] = name
+
+            # original code below:
             else:
-                log.error("The expression for looking \"deviceName\" not found in config %s", dumps(self.__config['converter']))
+                if self.__config['converter'].get("deviceNameJsonExpression") is not None:
+                    dict_result["deviceName"] = TBUtility.get_value(self.__config['converter'].get("deviceNameJsonExpression"), data, expression_instead_none=True)
+                else:
+                    log.error("The expression for looking \"deviceName\" not found in config %s", dumps(self.__config['converter']))
             if self.__config['converter'].get("deviceTypeJsonExpression") is not None:
                 dict_result["deviceType"] = TBUtility.get_value(self.__config['converter'].get("deviceTypeJsonExpression"), data, expression_instead_none=True)
             else:

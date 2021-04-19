@@ -1,26 +1,26 @@
 thingsboard:
-  host: thingsboard.cloud
+  host: demo.thingsboard.io
   port: 1883
   remoteShell: false
   remoteConfiguration: false
   security:
-    accessToken: PUT_YOUR_GW_ACCESS_TOKEN_HERE
+    accessToken: EV0d5zubZqOnWPPgja5I
   qos: 1
 storage:
-  type: memory
-  read_records_count: 100
-  max_records_count: 100000
-#  type: file
-#  data_folder_path: ./data/
-#  max_file_count: 10
-#  max_read_records_count: 10
-#  max_records_per_file: 10000
+#  type: memory
+#  read_records_count: 100
+#  max_records_count: 100000
+  type: file
+  data_folder_path: ./data/
+  max_file_count: 10
+  max_read_records_count: 10
+  max_records_per_file: 10000
 connectors:
-  -
-    name: MQTT Broker Connector
-    type: mqtt
-    configuration: mqtt.json
-
+#  -
+#    name: MQTT Broker Connector
+#    type: mqtt
+#    configuration: mqtt.json
+#
 #  -
 #    name: Modbus Connector
 #    type: modbus
@@ -41,11 +41,11 @@ connectors:
 #    type: ble
 #    configuration: ble.json
 #
-#  -
-#    name: REQUEST Connector
-#    type: request
-#    configuration: request.json
-#
+  -
+    name: REQUEST Connector
+    type: request
+    configuration: request.json
+
 #  -
 #    name: CAN Connector
 #    type: can
